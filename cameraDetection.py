@@ -3,8 +3,38 @@
 
 import cv2
 import easyocr
+import numpy as np
 
-def processData(data, frame):
+
+
+def processData(frame):
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    blackLines = []
+    blackLineThreshold = 5
+
+    for i in range(len(frame)):
+        blackLineCurrent = 0
+        for j in range(len(frame[i])):
+            if frame[i][j] < 75: #50 = dark gray
+                blackLineCurrent += 1 
+
+        if blackLineCurrent > blackLineThreshold:
+            blackLines.append(i)
+            #frame = cv2.line(frame, (0, i), (len(frame[i]), i), (0, 0, 255), thickness=1)
+
+    newFrame = []
+    for i in range(len(blackLines)):
+        newFrame.append(frame[blackLines[i]])
+
+    newFrame = np.array(newFrame)
+    
+    cv2.imwrite('userTakenImage.png', newFrame)
+
+    return newFrame
+    
+
+def readImage(frame, reader):
+    data = reader.readtext(frame, paragraph="False")
     text = []
     for i in range(len(data)):
         l = data[i][-1].split()
@@ -25,12 +55,15 @@ def runCamera():
             break
         elif cv2.waitKey(1) == 32: #ASCII for space
             reader = easyocr.Reader(['en'])
-            frame = cv2.imread("IMG_8728.png")
+            frame = cv2.imread("IMG_8728.jpg")
             
-            result = reader.readtext(frame, paragraph="False")
-            print(processData(result, frame))
+            frame = processData(frame)
+            result = readImage(frame, reader)
             print(result)
+
             cv2.destroyAllWindows()
 
     cv2.destroyAllWindows()
+
+runCamera()
 
