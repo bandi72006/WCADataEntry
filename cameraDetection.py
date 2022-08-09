@@ -46,6 +46,7 @@ def processData(frame):
         newFrame.append(frame[i][min(blackLines):max(blackLines)])
     
     newFrame = np.array(newFrame)
+    newFrame = cv2.resize(newFrame, (500, 700)) 
     
     edged = cv2.Canny(newFrame, 30, 200)
     
@@ -54,8 +55,8 @@ def processData(frame):
 
     for contour in contours:
         x,y,w,h = cv2.boundingRect(contour)
-        if cv2.contourArea(contour) > 1500 and w > 500:
-            cv2.drawContours(newFrame, [contour], 0, (0, 255, 0), 2)
+        if cv2.contourArea(contour) > 800 and w > 350:
+            cv2.rectangle(newFrame, (x, y), (x+w, y+h), (0,0,0), 2)
 
     cv2.imwrite('userTakenImage.png', newFrame)
 
@@ -70,7 +71,7 @@ def readImage(frame, reader):
         for j in range(len(l)):
             text.append(l[j])
             frame = cv2.rectangle(frame, data[i][0][0], data[i][0][2], (0,0,255), 1) #Colour is in BGR not RGB 
-            cv2.imwrite('userTakenImage.png', frame)
+            #cv2.imwrite('userTakenImage.png', frame)
     
     return text
 
