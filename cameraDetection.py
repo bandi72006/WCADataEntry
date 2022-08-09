@@ -5,17 +5,16 @@ import cv2
 import easyocr
 import numpy as np
 
-
-
 def processData(frame):
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blackLines = []
     blackLineThreshold = 5
 
+    #Y trimming
     for i in range(len(frame)):
         blackLineCurrent = 0
         for j in range(len(frame[i])):
-            if frame[i][j] < 75: #50 = dark gray
+            if frame[i][j] < 75: #75 = dark gray
                 blackLineCurrent += 1 
 
         if blackLineCurrent > blackLineThreshold:
@@ -26,8 +25,38 @@ def processData(frame):
     for i in range(len(blackLines)):
         newFrame.append(frame[blackLines[i]])
 
+    frame = newFrame
+
+    #X trimming
+    blackLines = []
+    for i in range(len(frame[0])):
+        blackLineCurrent = 0
+        for j in range(len(frame)):
+            if frame[j][i] < 75:
+                blackLineCurrent += 1 
+
+        if blackLineCurrent > blackLineThreshold:
+            blackLines.append(i)
+            #frame = cv2.line(frame, (i, 0), (i, len(frame[0])), (0, 0, 255), thickness=1)
+    
+    #cv2.imwrite('userTakenImage.png', frame)
+    
+    newFrame = []
+    for i in range(len(frame)):
+        newFrame.append(frame[i][min(blackLines):max(blackLines)])
+    
     newFrame = np.array(newFrame)
     
+    edged = cv2.Canny(newFrame, 30, 200)
+    
+    contours, hierarchy = cv2.findContours(edged, 
+        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    for contour in contours:
+        x,y,w,h = cv2.boundingRect(contour)
+        if cv2.contourArea(contour) > 1500 and w > 500:
+            cv2.drawContours(newFrame, [contour], 0, (0, 255, 0), 2)
+
     cv2.imwrite('userTakenImage.png', newFrame)
 
     return newFrame
