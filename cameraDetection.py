@@ -53,14 +53,17 @@ def processData(frame):
     contours, hierarchy = cv2.findContours(edged, 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
+    bBoxes = 0
     for contour in contours:
         x,y,w,h = cv2.boundingRect(contour)
         if cv2.contourArea(contour) > 800 and w > 350:
             cv2.rectangle(newFrame, (x, y), (x+w, y+h), (0,0,0), 2)
+            cv2.imwrite("data" + str(bBoxes) + ".jpg", newFrame[y:y+h, x:x+w])
+            bBoxes += 1
 
     cv2.imwrite('userTakenImage.png', newFrame)
 
-    return newFrame
+    return bBoxes
     
 
 def readImage(frame, reader):
@@ -87,9 +90,10 @@ def runCamera():
             reader = easyocr.Reader(['en'])
             frame = cv2.imread("IMG_8728.jpg")
             
-            frame = processData(frame)
-            result = readImage(frame, reader)
-            print(result)
+            data = processData(frame)
+            for i in range(data):
+                result = readImage(cv2.imread("data" + str(i) + ".jpg"), reader)
+                print(i, ":       ", result)
 
             cv2.destroyAllWindows()
 
